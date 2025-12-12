@@ -671,7 +671,7 @@ message_2:
         dc.b    '              ready for big mega compos '
         dc.b    '                        but I like more '
         dc.b    '                    the "snack feeling" '
-        dc.b    '                 of fast mini craktros. '
+        dc.b    '                of fast mini cracktros. '
         dc.b    '                                        '
         dc.b    '                                        '
         dc.b    '                                        '
