@@ -9,6 +9,8 @@ PERSP_SHIFT = 8
 POINT_COUNT = 14
 FACE_COUNT = 24
 
+H_PAD = 14
+
 BLITTER_BITPLANES = 3
 FP_BITS = 3
 SubPixelBlitterEdgeLine_Mask = (1<<FP_BITS)-1
@@ -671,7 +673,7 @@ message_2:
         dc.b    '              ready for big mega compos '
         dc.b    '                        but I like more '
         dc.b    '                    the "snack feeling" '
-        dc.b    '                 of fast mini craktros. '
+        dc.b    '                of fast mini cracktros. '
         dc.b    '                                        '
         dc.b    '                                        '
         dc.b    '                                        '
@@ -984,18 +986,14 @@ BuildRotationMatrix:
 
 Clear:
         bsr     WaitBlitter
-        clr.w   bltdmod(a6)
+        move.w   #H_PAD,bltdmod(a6)
         move.l  #$01000000,bltcon0(a6)
 
         move.l  DrawScreen(pc),a0
         add.l   #(SCREEN_BW*SCREEN_H),a0
         move.l  a0,bltdpt(a6)
         
-        move.w  #((SCREEN_H*BLITTER_BITPLANES)&1023)*64+SCREEN_BW/2,bltsize(a6)
-        ifgt    SCREEN_H*BLITTER_BITPLANES-1024 ; remainder if max OCS height exceeded
-        BLIT_WAIT
-        move.w  #(SCREEN_H*BLITTER_BITPLANES-1024)*64+SCREEN_BW/2,bltsize(a6)
-        endc
+        move.w  #((SCREEN_H*BLITTER_BITPLANES)&1023)*64+(SCREEN_BW-H_PAD)/2,bltsize(a6)
         rts
 
 SwapBuffers:
@@ -1095,18 +1093,19 @@ FillScreen:
         
         move.w  #ANBNC!ANBC!ABNC!ABC!DEST!SRCA,bltcon0(a6) ; bltcon0: Copy channel A -> D
         move.w  #BLITREVERSE!FILL_XOR,bltcon1(a6) ; bltcon1: Enable fill and descending mode (fill must be DESC)
-        clr.l   bltamod(a6) ; Zero modulo for channels A and D (combined into single longword op)
-        
+        move.w   #H_PAD,bltamod(a6) ; set modulo to H_PAD bytes
+        move.w   #H_PAD,bltdmod(a6) ; set modulo to H_PAD bytes
+    
         move.l  DrawScreen(pc),a0
         ; set pointer starting from the 2nd bitplane
-        add.w   #(SCREEN_BW*SCREEN_H),a0
+        add.w   #(SCREEN_BW*SCREEN_H)-H_PAD,a0
 
         ; we need to flill only 3 blitplanes from the starting offset at a0
         lea     (SCREEN_BW*SCREEN_H*BLITTER_BITPLANES)-2(a0),a1
 
         move.l  a1,bltapt(a6) ; Same address for source and dest
         move.l  a1,bltdpt(a6)
-        move.w  #SCREEN_H*BLITTER_BITPLANES*64+SCREEN_BW/2,bltsize(a6) ; Fill whole screen
+        move.w  #SCREEN_H*BLITTER_BITPLANES*64+(SCREEN_BW-H_PAD)/2,bltsize(a6) ; Fill whole screen
         rts
 
 ; DrawLine settings
